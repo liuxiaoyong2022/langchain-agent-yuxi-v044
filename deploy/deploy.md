@@ -154,6 +154,20 @@ pnpm run server
 ```
 
 ## 1.10 github push 
+要push to github 需要作以下设置 前提是 ～/.ssh/目录下要有对应的证书文件 
+
+```cert
+(base) xiaoyongliu@xiaoyongs-MacBook-Pro .ssh % ls -la
+total 40
+drwx------   7 xiaoyongliu  staff   224 Mar  6 21:52 .
+drwxr-xr-x+ 67 xiaoyongliu  staff  2144 Mar  6 22:49 ..
+-rw-------@  1 xiaoyongliu  staff   419 Mar  6 21:46 id_ed25519         --->private
+-rw-r--r--@  1 xiaoyongliu  staff   104 Mar  6 21:46 id_ed25519.pub     --->public cert
+-rw-------@  1 xiaoyongliu  staff  3389 Dec 22 10:11 id_rsa
+-rw-r--r--@  1 xiaoyongliu  staff   746 Dec 22 10:18 id_rsa.pub
+-rw-r--r--   1 xiaoyongliu  staff  2702 Mar  6 22:59 known_hosts
+```
+**命令行执行**
 ```
 git remote set-url origin git@github.com:liuxiaoyong2022/langchain-agent-yuxi-v044.git
 ```
