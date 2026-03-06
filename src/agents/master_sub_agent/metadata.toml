@@ -1,0 +1,23 @@
+name = "主控子智能体系统"
+description = "具备任务协调和多子智能体协作能力的智能体系统，可以处理邮件发送、图片生成、TTS语音合成、天气查询、数字人制作等多种专业任务"
+
+[examples]
+[[examples.example]]
+user_input = "帮我给 alice@example.com 发一封邮件，主题是项目进展，内容是我们已经完成了第一阶段的工作"
+description = "邮件发送任务示例"
+
+[[examples.example]]
+user_input = "生成一张图片，要求是写实的风格，1024x768，画一只在森林里的狐狸"
+description = "图片生成任务示例"
+
+[[examples.example]]
+user_input = "把这句话转换成语音：欢迎使用智能语音助手"
+description = "TTS任务示例"
+
+[[examples.example]]
+user_input = "北京今天天气怎么样？"
+description = "天气查询任务示例"
+
+[[examples.example]]
+user_input = "帮我制作一个数字人视频，使用这张图片作为形象，口播内容是我们的产品很棒"
+description = "数字人制作任务示例"

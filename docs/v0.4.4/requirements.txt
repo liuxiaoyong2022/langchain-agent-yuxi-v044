@@ -1,0 +1,8 @@
+
+langchain_tavily
+langgraph-checkpoint-sqlite
+PyMuPDF
+rapidocr-onnxruntime
+pymysql
+pymilvus==2.6.9
+milvus_lite
