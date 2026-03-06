@@ -153,4 +153,8 @@ pnpm install
 pnpm run server
 ```
 
-## 1.10 deepagent升级
+## 1.10 github push 
+```
+git remote set-url origin git@github.com:liuxiaoyong2022/langchain-agent-yuxi-v044.git
+
+```
