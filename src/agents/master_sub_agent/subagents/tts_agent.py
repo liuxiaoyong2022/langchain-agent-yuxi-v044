@@ -1,7 +1,7 @@
 """TTS Subagent - TTS子智能体配置"""
 
 from src.agents.master_sub_agent.prompts import TTS_AGENT_PROMPT
-from src.agents.master_sub_agent.tools import get_tts_tools
+from .tts_agent_tools import get_tts_tools
 
 
 def get_tts_subagent() -> dict:
@@ -20,11 +20,11 @@ def get_tts_subagent() -> dict:
         ),
         "system_prompt": TTS_AGENT_PROMPT,
         "tools": get_tts_tools(),
-        "interrupt_on": {
-            # Override: require approval for reads in this subagent
-            "generate_tts_2": {
-                    "allowed_decisions": ["approve", "reject"],
-                },
+        # "interrupt_on": {
+        #     # Override: require approval for reads in this subagent
+        #     "generate_tts_2": {
+        #             "allowed_decisions": ["approve", "reject"],
+        #         },
     
-        }    
+        # }    
     }

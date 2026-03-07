@@ -1,7 +1,7 @@
 """Image Subagent - 图片生成子智能体配置"""
 
 from src.agents.master_sub_agent.prompts import IMAGE_AGENT_PROMPT
-from src.agents.master_sub_agent.tools import get_image_tools
+from .image_agent_tools import get_image_tools
 
 
 def get_image_subagent() -> dict:

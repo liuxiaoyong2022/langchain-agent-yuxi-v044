@@ -1,7 +1,7 @@
 """Digital Human Subagent - 数字人子智能体配置"""
 
 from src.agents.master_sub_agent.prompts import DIGITAL_HUMAN_AGENT_PROMPT
-from src.agents.master_sub_agent.tools import get_digital_human_tools
+from .digital_human_agent_tools import get_digital_human_tools
 
 
 def get_digital_human_subagent() -> dict:

@@ -1,7 +1,7 @@
 """Weather Subagent - 天气子智能体配置"""
 
 from src.agents.master_sub_agent.prompts import WEATHER_AGENT_PROMPT
-from src.agents.master_sub_agent.tools import get_weather_tools
+from .weather_agent_tools import get_weather_tools
 
 
 def get_weather_subagent() -> dict:

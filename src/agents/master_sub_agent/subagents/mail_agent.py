@@ -1,7 +1,7 @@
 """Mail Subagent - 邮件子智能体配置"""
 
 from src.agents.master_sub_agent.prompts import MAIL_AGENT_PROMPT
-from src.agents.master_sub_agent.tools import get_mail_tools
+from .mail_agent_tools import get_mail_tools
 
 
 def get_mail_subagent() -> dict:
