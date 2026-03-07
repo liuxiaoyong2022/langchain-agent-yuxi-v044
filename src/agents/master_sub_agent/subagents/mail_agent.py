@@ -20,4 +20,9 @@ def get_mail_subagent() -> dict:
         ),
         "system_prompt": MAIL_AGENT_PROMPT,
         "tools": get_mail_tools(),
+        # "interrupt_on": {
+        #     "send_email": {
+        #         "allowed_decisions": ["approve", "reject"],
+        #     },
+        # },
     }
