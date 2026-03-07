@@ -39,7 +39,8 @@
 - 先让study_agent 实现 get_weather 和 pdf技能 (可参考mini_openclaw_agent)
 - 修改仅于master_sub_agent下 不要修改其它目录文件
 
-## 工作流程
+### 4. 增加pdf附件处理能力
+- 分析项目程前端部分 即/web目录下 前端附件上传功能中的文件类型限制,增加pdf上传类型
 
 ### 标准任务流程
 

@@ -4,7 +4,7 @@
       <input
         type="file"
         multiple
-        accept=".txt,.md,.docx,.html,.htm"
+        accept=".txt,.md,.docx,.html,.htm,.pdf"
         :disabled="disabled || isUploading"
         @change="handleFileChange"
       />
@@ -53,7 +53,7 @@ const props = defineProps({
 const emit = defineEmits(['upload', 'remove'])
 
 const extensionsText = computed(() => {
-  if (!props.limits?.allowed_extensions?.length) return 'txt/md/docx/html'
+  if (!props.limits?.allowed_extensions?.length) return 'txt/md/docx/html/pdf'
   return props.limits.allowed_extensions.map((item) => item.replace('.', '')).join(' / ')
 })
 

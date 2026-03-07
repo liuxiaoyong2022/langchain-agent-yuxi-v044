@@ -56,6 +56,7 @@ class MasterSubAgent(BaseAgent):
         "weather_query",
         "pdf_processing",
         "multi_agent_coordination",
+        "file_upload",
     ]
 
     def __init__(self, **kwargs):
