@@ -33,10 +33,11 @@
 -  将src/agents/master_sub_agent/tools.py 中各个工具 包括 工具分组函数 按功能 拆分到不同的 xxx_agent_tools.py 中去 比如: mail_agent_tools  image_agent_tools,tts_agent_tools 等， 
 - 相应重构 graph.py 文件
 
-### 3. SubAgentMiddleware
-- 管理所有子智能体
-- 自动将任务路由到对应的子智能体
-- 处理子智能体的调用和结果汇总
+### 3. 重构master_sub_agent 
+- 在src/agents/master_sub_agent下，移出weather_agent 以及相关它的工具和prompt 
+- 在master_sub_agent下 新增 skill_study_agent 让它处理现有子智能体以外的任务，即让主控智能体将当前已有子智能体不能完成的任务 路由给它，它可以通过skill学习来处理任务 它的实现可参考 src/agents/mini_openclaw_agent 
+- 先让study_agent 实现 get_weather 和 pdf技能 (可参考mini_openclaw_agent)
+- 修改仅于master_sub_agent下 不要修改其它目录文件
 
 ## 工作流程
 

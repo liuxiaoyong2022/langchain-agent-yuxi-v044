@@ -12,8 +12,8 @@ from src.agents.master_sub_agent.subagents import (
     get_image_subagent,
     get_mail_subagent,
     get_tts_subagent,
-    get_weather_subagent,
 )
+from src.agents.master_sub_agent.subagents.skill_study_agent import get_skill_study_subagent
 
 
 @dynamic_prompt
@@ -31,7 +31,7 @@ class MasterSubAgent(BaseAgent):
 
     架构特点：
     - 主控智能体（Orchestrator）：对话入口、意图识别、任务分发、结果汇总
-    - 子智能体系统：5个专业子智能体，各司其职
+    - 子智能体系统：4个专业子智能体 + 1个技能学习型子智能体
     - 支持多轮对话收集信息
     - 支持用户确认机制
     - 支持任务规划和执行
@@ -40,19 +40,21 @@ class MasterSubAgent(BaseAgent):
     - mail_agent: 邮件发送
     - image_agent: 图片生成
     - tts_agent: 语音合成
-    - weather_agent: 天气查询
     - digital_human_agent: 数字人制作
+    - skill_study_agent: 技能学习型子智能体（处理天气查询、PDF 等其他任务）
     """
 
     name = "主控子智能体系统"
-    description = "具备任务协调和多子智能体协作能力的智能体系统，可以处理邮件、图片生成、TTS、天气查询、数字人制作等多种任务"
+    description = "具备任务协调和多子智能体协作能力的智能体系统，可以处理邮件、图片生成、TTS、数字人制作等多种任务，并通过技能学习型子智能体处理更多通用任务"
     context_schema = MasterSubContext
     capabilities = [
         "email",
         "image_generation",
         "tts",
-        "weather_query",
         "digital_human",
+        "skill_learning",
+        "weather_query",
+        "pdf_processing",
         "multi_agent_coordination",
     ]
 
@@ -77,8 +79,8 @@ class MasterSubAgent(BaseAgent):
             get_mail_subagent(),
             get_image_subagent(),
             get_tts_subagent(),
-            get_weather_subagent(),
             get_digital_human_subagent(),
+            get_skill_study_subagent(),
         ]
 
         # 使用 create_agent 创建主智能体，集成子智能体
