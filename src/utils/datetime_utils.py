@@ -22,6 +22,11 @@ def utc_now() -> dt.datetime:
     return dt.datetime.now(UTC)
 
 
+def utc_now_naive() -> dt.datetime:
+    """Return the current UTC time as a naive datetime (for legacy code)."""
+    return dt.datetime.now(UTC).replace(tzinfo=None)
+
+
 def shanghai_now() -> dt.datetime:
     """Return the current Asia/Shanghai time as an aware datetime."""
     return utc_now().astimezone(SHANGHAI_TZ)
@@ -62,6 +67,22 @@ def shanghai_isoformat(value: dt.datetime | None = None) -> str:
     """Return an ISO 8601 string in Asia/Shanghai timezone."""
     value = ensure_shanghai(value or shanghai_now())
     return value.isoformat()
+
+
+def format_utc_datetime(dt_value: dt.datetime | None) -> str | None:
+    """
+    Format datetime to UTC ISO string.
+
+    For compatibility with legacy code, assumes naive datetimes are in UTC.
+    Returns None for None input.
+    """
+    if dt_value is None:
+        return None
+    if dt_value.tzinfo is None:
+        dt_value = dt_value.replace(tzinfo=UTC)
+    else:
+        dt_value = dt_value.astimezone(UTC)
+    return dt_value.isoformat()
 
 
 def coerce_datetime(value: dt.datetime | None) -> dt.datetime | None:
@@ -114,11 +135,13 @@ __all__ = [
     "UTC",
     "SHANGHAI_TZ",
     "utc_now",
+    "utc_now_naive",
     "shanghai_now",
     "ensure_utc",
     "ensure_shanghai",
     "utc_isoformat",
     "shanghai_isoformat",
+    "format_utc_datetime",
     "coerce_datetime",
     "coerce_any_to_utc_datetime",
     "normalize_iterable_to_utc",

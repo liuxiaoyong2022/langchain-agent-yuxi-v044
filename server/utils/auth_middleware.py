@@ -28,6 +28,10 @@ async def get_db():
     async with db_manager.get_async_session_context() as db:
         yield db
 
+# 给非路由环境用
+async def get_db_session():
+    async with db_manager.get_async_session_context() as session:
+        return session
 
 # 获取当前用户（异步版本）
 async def get_current_user(token: str | None = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):

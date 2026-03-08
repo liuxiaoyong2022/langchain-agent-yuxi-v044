@@ -26,9 +26,21 @@ from src.services.doc_converter import (
     MAX_ATTACHMENT_SIZE_BYTES,
     convert_upload_to_markdown,
 )
+from src.services.conversation_service import (
+    create_thread_view,
+    delete_thread_attachment_view,
+    delete_thread_view,
+    list_thread_attachments_view,
+    list_threads_view,
+    update_thread_view,
+    upload_thread_attachment_view,
+)
+# 附件存储桶名称
+ATTACHMENTS_BUCKET = "chat-attachments"
 from src.utils.datetime_utils import utc_isoformat
 from src.utils.logging_config import logger
 from src.utils.image_processor import process_uploaded_image
+from src.storage.minio import get_minio_client
 
 
 # 图片上传响应模型
@@ -1165,31 +1177,67 @@ async def upload_thread_attachment(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_required_user),
 ):
+    
     """上传并解析附件为 Markdown，附加到指定对话线程。"""
-    conv_manager = ConversationManager(db)
-    conversation = await _require_user_conversation(conv_manager, thread_id, str(current_user.id))
+    return await upload_thread_attachment_view(
+        thread_id=thread_id,
+        file=file,
+        db=db,
+        current_user_id=str(current_user.id),
+    )
 
-    try:
-        conversion = await convert_upload_to_markdown(file)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except Exception as exc:  # noqa: BLE001
-        logger.error(f"附件解析失败: {exc}")
-        raise HTTPException(status_code=500, detail="附件解析失败，请稍后重试") from exc
+    # """上传并解析附件为 Markdown，附加到指定对话线程。"""
+    # conv_manager = ConversationManager(db)
+    # conversation = await _require_user_conversation(conv_manager, thread_id, str(current_user.id))
 
-    attachment_record = {
-        "file_id": conversion.file_id,
-        "file_name": conversion.file_name,
-        "file_type": conversion.file_type,
-        "file_size": conversion.file_size,
-        "status": "parsed",
-        "markdown": conversion.markdown,
-        "uploaded_at": utc_isoformat(),
-        "truncated": conversion.truncated,
-    }
-    await conv_manager.add_attachment(conversation.id, attachment_record)
+    # try:
+    #     conversion = await convert_upload_to_markdown(file)
+    #     logger.info(f"step 6.0.0-----> 附件解析成功: {conversion.file_name} ({conversion.file_type}, {conversion.file_size} bytes)")
+    #     file.file.seek(0) # 重置到开头
+    #     logger.info(f"step 6.0.1-----> 文件:{file.filename}: 重置到开头")
+    # except ValueError as exc:
+    #     raise HTTPException(status_code=400, detail=str(exc)) from exc
+    # except Exception as exc:  # noqa: BLE001
+    #     logger.error(f"附件解析失败: {exc}")
+    #     raise HTTPException(status_code=500, detail="附件解析失败，请稍后重试") from exc
+    
+    # # 生成文件路径
+    # file_path = _make_attachment_path(conversion.file_name)
+    # # 上传源文件到 MinIO（用于前端下载）
+    # minio_url = None
+    # try:
+    #     file_content = await file.read()
+    #     logger.info(f"**** ---> step 0.2 upload file size: {len(file_content)} bytes")
+    #     await file.seek(0)
+    #     client = get_minio_client()
+    #     object_name = f"attachments/{thread_id}/{conversion.file_name}"
+    #     result = client.upload_file(
+    #         bucket_name=ATTACHMENTS_BUCKET,
+    #         object_name=object_name,
+    #         data=file_content,
+    #         content_type=conversion.file_type or "application/octet-stream",
+    #     )
+    #     minio_url = result.url
+    #     logger.info(f"Uploaded attachment to MinIO: {object_name}, minio_url: {minio_url}")
+    #     # minio_url = result.public_url
+    #     # logger.info(f"Uploaded attachment to MinIO: {object_name}")
+    # except Exception as e:
+    #     logger.error(f"Failed to upload attachment to MinIO: {e}")
+    #     # 继续处理，不因为上传失败而中断
 
-    return _serialize_attachment(attachment_record)
+    # attachment_record = {
+    #     "file_id": conversion.file_id,
+    #     "file_name": conversion.file_name,
+    #     "file_type": conversion.file_type,
+    #     "file_size": conversion.file_size,
+    #     "status": "parsed",
+    #     "markdown": conversion.markdown,
+    #     "uploaded_at": utc_isoformat(),
+    #     "truncated": conversion.truncated,
+    # }
+    # await conv_manager.add_attachment(conversation.id, attachment_record)
+    
+    # return _serialize_attachment(attachment_record)
 
 
 @chat.get("/thread/{thread_id}/attachments", response_model=AttachmentListResponse)
@@ -1199,6 +1247,7 @@ async def list_thread_attachments(
     current_user: User = Depends(get_required_user),
 ):
     """列出当前对话线程的所有附件元信息。"""
+    logger.info(f"---------> Listing attachments thread_id: {thread_id} for db: {db}")
     conv_manager = ConversationManager(db)
     conversation = await _require_user_conversation(conv_manager, thread_id, str(current_user.id))
     attachments = await conv_manager.get_attachments(conversation.id)
@@ -1384,3 +1433,19 @@ async def upload_image(file: UploadFile = File(...), current_user: User = Depend
     except Exception as e:
         logger.error(f"图片上传处理失败: {str(e)}, {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"图片处理失败: {str(e)}")
+
+def _make_attachment_path(file_name: str) -> str:
+    """生成附件在文件系统中的路径（无需 thread_id，state 已隔离）
+
+    统一使用 .md 扩展名，因为文件内容已经是 Markdown 格式
+    """
+    # 提取不带扩展名的部分
+    base_name = file_name
+    for ext in [".docx", ".txt", ".html", ".htm", ".pdf", ".md"]:
+        if file_name.lower().endswith(ext):
+            base_name = file_name[: -len(ext)]
+            break
+
+    # 替换路径分隔符
+    safe_name = base_name.replace("/", "_").replace("\\", "_")
+    return f"/attachments/{safe_name}.md"

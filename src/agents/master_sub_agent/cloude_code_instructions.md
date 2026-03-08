@@ -42,7 +42,8 @@
 ### 4. 增加pdf附件处理能力
 - 分析项目程前端部分 即/web目录下 前端附件上传功能中的文件类型限制,增加pdf上传类型
 
-### 标准任务流程
+#### 5. 优化附件处理
+- 对src/agents/master_sub_agent/skill_study_agent/core_tools.py 中的list_conversation_attachments进行优化 请参考 src/server/routers/chat_router.py中的 list_thread_attachments 获取attachments 的原理，应用到ist_conversation_attachments中,从而获取正当前会话 即thread_id 的附件
 
 ```
 用户输入
