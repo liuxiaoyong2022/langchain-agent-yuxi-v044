@@ -47,7 +47,7 @@ def fetch_url(url: str) -> str:
     Returns:
         Cleaned Markdown content
     """
-    print(f"step skill.1.0 -> Fetching {url}")
+    print(f"step skill.1.0 -> fetch_url.  url:  {url}")
     try:
         response = requests.get(
             url,
@@ -93,7 +93,7 @@ def python_repl(code: str, timeout: Optional[int] = None) -> str:
     Returns:
         Output from execution or error messages
     """
-    print(f"step skill.2.0 -> Executing Python code")
+    print(f"step skill.2.0 -> Executing Python code :{code}")
     return _repl_instance.run(code)
 
 
@@ -229,7 +229,7 @@ async def list_conversation_attachments(config: RunnableConfig) -> str:
     try:
         # from src.storage.postgres.manager import pg_manager
         from src.repositories.conversation_repository import ConversationRepository
-
+        from src.storage.minio.client import get_minio_client
     
         db = await get_db_session()
         logger.info(f"** step 5.1.1--------------> Database session acquired for listing attachments db:{db}")
@@ -253,14 +253,24 @@ async def list_conversation_attachments(config: RunnableConfig) -> str:
 
             if not attachments:
                 return "No attachments found in this conversation session."
+            
+            # 构建 MinIO 访问路径
+            # 格式: http://{minio_host}:9000/chat-attachments/attachments/{thread_id}/{文件名}
+            minio_client = get_minio_client()
+            minio_host = minio_client.public_endpoint  # 格式: "{host_ip}:9000"
+            bucket_name = "chat-attachments"
 
             # Format the attachment list
             result = f"Found {len(attachments)} attachment(s):\n\n"
             for i, attachment in enumerate(attachments, 1):
+                
                 file_name = attachment.get("file_name", "Unknown")
+                object_name = f"attachments/{thread_id}/{file_name}"
+                minio_url = f"http://{minio_host}/{bucket_name}/{object_name}"
                 file_type = attachment.get("file_type", "Unknown")
                 status = attachment.get("status", "Unknown")
-                file_path = attachment.get("file_path", "N/A")
+                # file_path = attachment.get("file_path", "N/A")
+                file_path=minio_url
                 uploaded_at = attachment.get("uploaded_at", "N/A")
 
                 result += f"{i}. {file_name}\n"
@@ -281,10 +291,11 @@ async def list_conversation_attachments(config: RunnableConfig) -> str:
 @tool
 async def fetch_attachment_file(file_name: str, config: RunnableConfig) -> str:
     """
-    Fetch the original file from MinIO by filename.
+    Fetch the original file from MinIO by return url.
 
     Use this to retrieve the original uploaded file content from storage.
-    The file type is automatically determined from the filename extension.
+    The tool automatically matches the filename with uploaded attachments,
+    corrects file extensions, and downloads from MinIO.
 
     Args:
         file_name: The name of the file to fetch (e.g., 'document.pdf', 'report.docx')
@@ -312,17 +323,18 @@ async def fetch_attachment_file(file_name: str, config: RunnableConfig) -> str:
     logger.info(f"step 6.0.2--------------> actual_file_name: {actual_file_name}, file_type: {file_type}")
 
     try:
-        from src.storage.postgres.manager import pg_manager
+        # from src.storage.postgres.manager import pg_manager
         from src.repositories.conversation_repository import ConversationRepository
         from src.storage.minio.client import get_minio_client
 
         # db = await pg_manager.get_async_session()
+        db = await get_db_session()
         try:
-            # conv_repo = ConversationRepository(db)
+            conv_repo = ConversationRepository(db)
 
-            # # 参考 chat_router.py 中 list_thread_attachments 的逻辑
-            # # 1. 通过 thread_id 获取会话
-            # conversation = await conv_repo.get_conversation_by_thread_id(thread_id)
+            # 参考 chat_router.py 中 list_thread_attachments 的逻辑
+            # 1. 通过 thread_id 获取会话
+            conversation = await conv_repo.get_conversation_by_thread_id(thread_id)
 
             # # 2. 验证会话存在且用户有权限
             # if not conversation:
@@ -332,13 +344,13 @@ async def fetch_attachment_file(file_name: str, config: RunnableConfig) -> str:
             # if user_id and conversation.user_id != str(user_id):
             #     return f"Error: Access denied. You do not have permission to access attachments in this conversation."
 
-            # # 3. 获取附件列表验证文件存在
-            # attachments = await conv_repo.get_attachments(conversation.id)
-            # attachment_file_names = [a.get("file_name", "") for a in attachments]
-
-            # # 验证文件是否在附件列表中
-            # if actual_file_name not in attachment_file_names:
-            #     return f"Error: File '{actual_file_name}' not found in attachments. Available files:\n" + "\n".join(f"  - {f}" for f in attachment_file_names)
+            # 3. 获取附件列表验证文件存在
+            attachments = await conv_repo.get_attachments(conversation.id)
+            attachment_file_names = [a.get("file_name", "") for a in attachments]
+            logger.info(f"step 6.0.1--------------> actual_file_name:{actual_file_name}     attachment_file_names: {attachment_file_names}")
+            # 验证文件是否在附件列表中
+            if actual_file_name not in attachment_file_names:
+                return f"Error: File '{actual_file_name}' not found in attachments. Available files:\n" + "\n".join(f"  - {f}" for f in attachment_file_names)
 
             # 构建 MinIO 访问路径
             # 格式: http://{minio_host}:9000/chat-attachments/attachments/{thread_id}/{文件名}
@@ -356,7 +368,7 @@ async def fetch_attachment_file(file_name: str, config: RunnableConfig) -> str:
             logger.info(f"step 6.1.1--------------> file_data length: {len(file_data)}")
 
             # 根据文件类型处理返回内容
-            if file_type.startswith("text/") or actual_file_name.endswith((".txt", ".md", ".html", ".htm", ".json", ".xml", ".pdf")):
+            if file_type.startswith("text/") or actual_file_name.endswith((".txt", ".md", ".html", ".htm", ".json", ".xml")):
                 # 文本文件直接返回内容
                 content = file_data.decode("utf-8", errors="replace")
                 # 限制返回内容长度
@@ -371,7 +383,7 @@ async def fetch_attachment_file(file_name: str, config: RunnableConfig) -> str:
                 return f"Binary file: {actual_file_name}\nSize: {len(file_data)} bytes\nType: {file_type}\n\nNote: This is a binary file. You can access it at: {minio_url}"
         finally:
             logger.info(f"step 6.2--------------> Finished processing fetch_attachment_file for {actual_file_name}")
-            # await db.close()
+            await db.close()
 
     except Exception as e:
         logger.error(f"step 6.error--------------> Error fetching attachment file: {e}")
