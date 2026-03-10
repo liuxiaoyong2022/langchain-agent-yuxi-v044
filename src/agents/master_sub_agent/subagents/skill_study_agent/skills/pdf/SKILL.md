@@ -51,6 +51,33 @@ with pdfplumber.open("document.pdf") as pdf:
                 print(row)
 ```
 
+### 提取图片
+
+使用提供的脚本提取 PDF 中的嵌入图片：
+
+```python
+# 使用 extract_pdf_images.py 脚本
+# 图片将保存到 /tmp/{pdf_filename}/image_extract/ 目录
+# 格式: /tmp/2412.09262v2/image_extract/001.jpg
+
+# 方法1: 直接运行脚本
+import subprocess
+result = subprocess.run(
+    ["python", "scripts/extract_pdf_images.py", "document.pdf"],
+    capture_output=True,
+    text=True
+)
+print(result.stdout)
+
+# 方法2: 使用 python_repl 工具执行
+# 在 python_repl 中:
+import sys
+sys.path.append("src/agents/master_sub_agent/subagents/skill_study_agent/skills/pdf/scripts")
+from extract_pdf_images import extract_images
+extracted = extract_images("document.pdf")
+print(f"提取了 {len(extracted)} 张图片")
+```
+
 ### 合并 PDF
 
 ```python
@@ -158,3 +185,4 @@ print("合并完成！输出文件: merged.pdf")
 - 处理大文件时注意内存使用
 - 某些 PDF 可能需要密码才能读取
 - 扫描的 PDF 需要 OCR（光学字符识别）才能提取文本
+- **提取图片时**：使用 `extract_pdf_images.py` 脚本，图片会自动保存到 `/tmp/{pdf文件名}/image_extract/` 目录，文件名为 `001.jpg`、`002.png` 等格式

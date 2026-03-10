@@ -42,8 +42,9 @@
 ### 4. 增加pdf附件处理能力
 - 分析项目程前端部分 即/web目录下 前端附件上传功能中的文件类型限制,增加pdf上传类型
 
-#### 5. 优化附件处理
-- 对src/agents/master_sub_agent/skill_study_agent/core_tools.py 中的list_conversation_attachments进行优化 请参考 src/server/routers/chat_router.py中的 list_thread_attachments 获取attachments 的原理，应用到ist_conversation_attachments中,从而获取正当前会话 即thread_id 的附件
+#### 5. skill 优化 
+- 分析 src/agents/master_sub_agent/skill_study_agent/skills/pdf 下的技能 要求在作pdf图片提取时，默认将提取出的图片 保存到 /tmp 目录下  格式为 /tmp/{图片所在文件}/image_extract/{序号}.{格式}  比如
+/tmp/2412.09262v2/image_extract/001.jpg
 
 ```
 用户输入
@@ -60,63 +61,4 @@ SubAgentMiddleware 路由到对应的子智能体
     ↓
 返回给用户
 ```
-
-## 子智能体详解
-
-### 1. mail-agent（邮件子智能体）
-**功能**：发送邮件
-**工具**：
-- `validate_email_address`: 验证邮箱格式
-- `send_email`: 发送邮件
-
-**工作流程**：
-1. 多轮对话收集：收件人邮箱、主题、内容
-2. 使用 `validate_email_address` 验证邮箱格式
-3. 展示信息并请求用户确认（yes/no）
-4. 用户确认后调用 `send_email` 发送邮件
-
-### 2. image-agent（图片生成子智能体）
-**功能**：生成图片
-**工具**：
-- `validate_image_params`: 验证图片参数
-- `generate_image`: 生成图片
-
-**工作流程**：
-1. 多轮对话收集：图片描述、风格、尺寸、数量
-2. 使用 `validate_image_params` 验证参数
-3. 展示信息并请求用户确认（yes/no）
-4. 用户确认后调用 `generate_image` 生成图片
-
-### 3. tts-agent（TTS子智能体）
-**功能**：生成语音
-**工具**：
-- `validate_tts_params`: 验证TTS参数
-- `generate_tts`: 生成语音
-
-**工作流程**：
-1. 多轮对话收集：语音文案、声音样本（可选）
-2. 使用 `validate_tts_params` 验证参数
-3. 展示信息并请求用户确认（yes/no）
-4. 用户确认后调用 `generate_tts` 生成语音
-
-### 4. weather-agent（天气查询子智能体）
-**功能**：查询天气
-**工具**：
-- `query_weather`: 查询天气
-
-**工作流程**：
-1. 多轮对话收集：城市名
-2. 直接调用 `query_weather` 查询天气（无需确认）
-
-### 5. digital-human-agent（数字人子智能体）
-**功能**：制作数字人视频
-**工具**：
-- `validate_digital_human_params`: 验证数字人参数
-- `create_digital_human`: 创建数字人视频
-
-**工作流程**：
-1. 多轮对话收集：数字人图片、口播文稿、声音样本（可选）
-2. 使用 `validate_digital_human_params` 验证参数
-3. 展示信息并请求用户确认（yes/no）
-4. 用户确认后调用 `create_digital_human` 制作视频
 
