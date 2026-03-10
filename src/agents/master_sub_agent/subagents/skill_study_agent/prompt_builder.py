@@ -94,7 +94,15 @@ class PromptBuilder:
 
     def build_system_prompt(self) -> str:
         """
-        构建 System Prompt
+        按照 PRD 规定的顺序拼接 System Prompt
+
+        顺序：
+        1. SKILLS_SNAPSHOT.md (能力列表)
+        2. SOUL.md (核心设定)
+        3. IDENTITY.md (自我认知)
+        4. USER.md (用户画像)
+        5. AGENTS.md (行为准则 & 记忆操作指南)
+        6. MEMORY.md (长期记忆)
 
         Returns:
             完整的系统提示词
@@ -103,6 +111,7 @@ class PromptBuilder:
 
         # 1. SKILLS_SNAPSHOT
         skills_snapshot = self.build_skills_snapshot()
+        print(f" step 0.8.1   PromptBuilder---------->   skills_snapshot:{skills_snapshot}")
         if skills_snapshot:
             parts.append(f"# Available Skills\n\n{skills_snapshot}")
 
@@ -116,9 +125,53 @@ class PromptBuilder:
         if identity:
             parts.append(f"# Self Awareness\n\n{identity}")
 
-        # 4. AGENTS.md (行为准则 & 技能协议)
+        # 4. USER.md (用户画像)
+        user_profile = self._read_file_safe(self.workspace_dir / "USER.md")
+        if user_profile:
+            parts.append(f"# User Profile\n\n{user_profile}")
+
+        # 5. AGENTS.md (行为准则 & 技能协议)
         agents = self._read_file_safe(self.workspace_dir / "AGENTS.md")
         if agents:
             parts.append(f"# Operational Guidelines\n\n{agents}")
 
+        # 6. MEMORY.md (长期记忆)
+        memory = self._read_file_safe(self.memory_dir / "MEMORY.md")
+        if memory:
+            parts.append(f"# Long-term Memory\n\n{memory}")
+
         return "\n\n---\n\n".join(parts)
+
+
+
+
+    # def build_system_prompt(self) -> str:
+    #     """
+    #     构建 System Prompt
+
+    #     Returns:
+    #         完整的系统提示词
+    #     """
+    #     parts = []
+
+    #     # 1. SKILLS_SNAPSHOT
+    #     skills_snapshot = self.build_skills_snapshot()
+    #     if skills_snapshot:
+    #         parts.append(f"# Available Skills\n\n{skills_snapshot}")
+
+    #     # 2. SOUL.md (核心设定)
+    #     soul = self._read_file_safe(self.workspace_dir / "SOUL.md")
+    #     if soul:
+    #         parts.append(f"# Core Identity\n\n{soul}")
+
+    #     # 3. IDENTITY.md (自我认知)
+    #     identity = self._read_file_safe(self.workspace_dir / "IDENTITY.md")
+    #     if identity:
+    #         parts.append(f"# Self Awareness\n\n{identity}")
+
+    #     # 4. AGENTS.md (行为准则 & 技能协议)
+    #     agents = self._read_file_safe(self.workspace_dir / "AGENTS.md")
+    #     if agents:
+    #         parts.append(f"# Operational Guidelines\n\n{agents}")
+
+    #     return "\n\n---\n\n".join(parts)
