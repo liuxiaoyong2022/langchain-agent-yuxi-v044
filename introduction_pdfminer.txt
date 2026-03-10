@@ -1,0 +1,77 @@
+1
+
+Introduction
+
+1
+Transformers with softmax attention (Vaswani et al., 2017)
+enjoy efficient parallel training but suffer from quadratic
+(in sequence length) complexity, thus motivating more
+RNN-like models that allow for linear-time sequence
+modeling. Linear attention, which replaces the exponential
+similarity function with a simple dot product over (possibly
+transformed) key/query vectors, has emerged as a promising
+alternative to classic softmax attention (Katharopoulos et al.,
+2020; Choromanski et al., 2021; Kasai et al., 2021; Peng
+et al., 2021). An attractive property of linear attention is that
+it admits a “recurrent form” in which it can be formulated
+as a linear RNN with 2D hidden states (Katharopoulos et al.,
+2020), thus enabling linear-time inference. For training,
+linear attention also admits a subquadratic “chunkwise par-
+allel form” which divides the sequence into non-overlapping
+chunks and performs (serial) inter-chunk recurrent computa-
+tions followed by (parallel) intra-chunk computations (Hua
+et al., 2022; Sun et al., 2023a; Lingle, 2023), thus (partially)
+maintaining parallel training. However, existing algorithms
+for linear attention are not I/O aware and thus, in practice,
+slower than optimized implementations of softmax attention
+(Dao et al., 2022b; Dao, 2023) on moderate sequence lengths.
+
+From a performance standpoint, linear attention has gener-
+ally been found to underperform ordinary softmax attention,
+often by a significant margin in language modeling (Kasai
+et al., 2021). Recent variants of linear attention such as
+RetNet (Sun et al., 2023a) and TransNormerLLM (Qin et al.,
+2023b) obtain significant improvements by multiplying
+the current hidden state with a decay factor before the
+RNN update. However, these works use a global, data-
+independent decay factor, despite the fact that in 1D RNNs,
+a data-dependent gating mechanism has been shown to be
+crucial for performance (van der Westhuizen & Lasenby,
+2018; Qin et al., 2023c). And even with the decay factor,
+linear attention Transformers underperform the strongest
+Transformer architectures when pretrained from scratch.
+
+This work develops a hardware-efficient algorithm for linear
+attention, and applies it to train a gated variant of linear
+attention that is competitive with softmax attention. We first
+discuss aspects of optimizing ordinary linear attention on
+modern GPUs and give two I/O-aware algorithms (tailored
+for different training settings) based on these principles (§3).
+Our implementation of the algorithm, called FLASHLIN-
+
+ 
+ 
+ 
+ 
+ 
+ 
+Gated Linear Attention Transformers with Hardware-Efficient Training
+
+EARATTENTION, is faster than FLASHATTENTION-2 (Dao,
+2023) even on short (e.g., 1K) sequences. We then describe
+a gated linear attention layer with a data-dependent gating
+mechanism and show how FLASHLINEARATTENTION can
+be generalized to the gated case (§4). We study the resulting
+gated linear attention (GLA) Transformer on moderate-scale
+language modeling benchmarks, where we train models with
+340M/1.3B parameters on 15B/100B tokens, respectively.
+We find that the GLA Transformer performs favorably
+against a strong LLaMA architecture Transformer baseline
+that makes use of recent recipes (Transformer++; Touvron
+et al., 2023) as well as recent linear-time sequence models
+such as RetNet (Sun et al., 2023a) and Mamba (Gu & Dao,
+2023). GLA Transformer is found to be particularly strong at
+length generalization and recall-intensive tasks among linear
+recurrent models. For training speed, the GLA Transformer
+has significantly higher throughput than a similarly sized
+Mamba model.

@@ -363,6 +363,9 @@ class ConversationManager:
         if not conversation:
             return False
 
+        # Delete all associated MinIO attachment files
+        await self._delete_conversation_attachments(thread_id, conversation.id)
+
         if soft_delete:
             conversation.status = "deleted"
             await self.db.commit()
@@ -494,6 +497,34 @@ class ConversationManager:
     # -------------------------------------------------------------------------
     # Attachment helpers
     # -------------------------------------------------------------------------
+
+    async def _delete_conversation_attachments(self, thread_id: str, conversation_id: int) -> None:
+        """
+        Delete all MinIO attachment files for a conversation
+
+        Args:
+            thread_id: Thread ID (used for MinIO object path)
+            conversation_id: Conversation ID (used to fetch attachment list)
+        """
+        attachments = await self.get_attachments(conversation_id)
+        if not attachments:
+            return
+
+        from src.storage.minio.client import get_minio_client
+
+        ATTACHMENTS_BUCKET = "chat-attachments"
+        client = get_minio_client()
+
+        for attachment in attachments:
+            file_name = attachment.get("file_name")
+            if file_name:
+                try:
+                    object_name = f"attachments/{thread_id}/{file_name}"
+                    await client.adelete_file(bucket_name=ATTACHMENTS_BUCKET, object_name=object_name)
+                    logger.info(f"Deleted attachment from MinIO: {object_name}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete attachment from MinIO ({object_name}): {e}")
+                    # Continue deleting other attachments
 
     async def get_attachments(self, conversation_id: int) -> list[dict]:
         conversation = await self._get_conversation_by_id(conversation_id)

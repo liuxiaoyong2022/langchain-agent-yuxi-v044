@@ -315,6 +315,28 @@ async def delete_thread_attachment_view(
 ) -> dict:
     conv_repo = ConversationRepository(db)
     conversation = await require_user_conversation(conv_repo, thread_id, str(current_user_id))
+
+    # 获取附件信息，用于删除 MinIO 中的文件
+    attachments = await conv_repo.get_attachments(conversation.id)
+    target_attachment = None
+    for attachment in attachments:
+        if attachment.get("file_id") == file_id:
+            target_attachment = attachment
+            break
+
+    # 删除 MinIO 中的文件
+    if target_attachment:
+        file_name = target_attachment.get("file_name")
+        if file_name:
+            try:
+                client = get_minio_client()
+                object_name = f"attachments/{thread_id}/{file_name}"
+                await client.adelete_file(bucket_name=ATTACHMENTS_BUCKET, object_name=object_name)
+                logger.info(f"Deleted attachment from MinIO: {object_name}")
+            except Exception as e:
+                logger.warning(f"Failed to delete attachment from MinIO ({object_name}): {e}")
+                # 继续删除数据库记录，即使 MinIO 删除失败
+
     removed = await conv_repo.remove_attachment(conversation.id, file_id)
     if not removed:
         raise HTTPException(status_code=404, detail="附件不存在或已被删除")

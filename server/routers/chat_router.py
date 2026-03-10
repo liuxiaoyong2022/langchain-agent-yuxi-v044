@@ -1268,12 +1268,12 @@ async def delete_thread_attachment(
     current_user: User = Depends(get_required_user),
 ):
     """移除指定附件。"""
-    conv_manager = ConversationManager(db)
-    conversation = await _require_user_conversation(conv_manager, thread_id, str(current_user.id))
-    removed = await conv_manager.remove_attachment(conversation.id, file_id)
-    if not removed:
-        raise HTTPException(status_code=404, detail="附件不存在或已被删除")
-    return {"message": "附件已删除"}
+    return await delete_thread_attachment_view(
+        thread_id=thread_id,
+        file_id=file_id,
+        db=db,
+        current_user_id=str(current_user.id),
+    )
 
 
 # =============================================================================

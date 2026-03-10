@@ -46,19 +46,14 @@
 - 分析 src/agents/master_sub_agent/skill_study_agent/skills/pdf 下的技能 要求在作pdf图片提取时，默认将提取出的图片 保存到 /tmp 目录下  格式为 /tmp/{图片所在文件}/image_extract/{序号}.{格式}  比如
 /tmp/2412.09262v2/image_extract/001.jpg
 
-```
-用户输入
-    ↓
-主控智能体理解意图
-    ↓
-SubAgentMiddleware 路由到对应的子智能体
-    ↓
-子智能体处理任务
-    ↓
-子智能体返回结果
-    ↓
-主控智能体汇总结果
-    ↓
-返回给用户
-```
+
+#### 6. 附件删除 优化 
+- 通过分析 src/server/routers/upload_thread_attachment 代码，优化delete_thread_attachment 方法 确保 存储在minio 中对应的附件文件也相应删除
+
+
+#### 7. 对话删除 优化 
+- 通过分析 src/server/routers/delete_thread_attachment 代码，优化 src.storage.conversation ConversationManager 的 delete_conversation 方法 确保 当前对话的所有附件文件 即 存储在minio 中对应的附件文件也相应删除
+
+
+
 
